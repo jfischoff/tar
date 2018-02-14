@@ -535,6 +535,9 @@ mapEntriesNoFail :: (Entry -> Entry) -> Entries e -> Entries e
 mapEntriesNoFail f =
   foldEntries (\entry -> Next (f entry)) Done Fail
 
+instance Semigroup (Entries e) where
+  (<>) = mappend
+
 instance Monoid (Entries e) where
   mempty      = Done
   mappend a b = foldEntries Next b Fail a
@@ -565,7 +568,7 @@ instance Arbitrary Entry where
       arbitraryEpochTime = fromIntegral <$> (arbitraryOctal 11 :: Gen Int64)
 
   shrink (Entry path content perms author time format) =
-      [ Entry path' content' perms author' time' format 
+      [ Entry path' content' perms author' time' format
       | (path', content', author', time') <-
          shrink (path, content, author, time) ]
    ++ [ Entry path content perms' author time format
@@ -626,7 +629,7 @@ instance Arbitrary EntryContent where
                return (OtherEntryType c bs (LBS.length bs)))
       ]
 
-  shrink (NormalFile bs _)   = [ NormalFile bs' (LBS.length bs') 
+  shrink (NormalFile bs _)   = [ NormalFile bs' (LBS.length bs')
                                | bs' <- shrink bs ]
   shrink  Directory          = []
   shrink (SymbolicLink link) = [ SymbolicLink link' | link' <- shrink link ]
@@ -636,7 +639,7 @@ instance Arbitrary EntryContent where
   shrink (BlockDevice     ma mi) = [ BlockDevice ma' mi'
                                    | (ma', mi') <- shrink (ma, mi) ]
   shrink  NamedPipe              = []
-  shrink (OtherEntryType c bs _) = [ OtherEntryType c bs' (LBS.length bs') 
+  shrink (OtherEntryType c bs _) = [ OtherEntryType c bs' (LBS.length bs')
                                    | bs' <- shrink bs ]
 
 instance Arbitrary LBS.ByteString where
